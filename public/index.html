@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!-- Inicialização padrão do html -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Chat Teste</title>
+
+    <!-- Importamos o jquery e o socket.io -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.dev.js"></script>
+
+    <!-- Importamos o arquivo CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Criamos um form id = chat, que será a "janela onde estará o chat e suas inputs e o botão" -->
+    <form id="chat">
+       <input type="text" name="username" placeholder="Digite seu usuário">
+
+       <!-- Caixa visual onde serão mostradas as mensagens -->
+       <div class="messages"></div>
+       <input type="text" name="message" placeholder="Digite sua mensagem">
+       <button type="submit">Enviar</button>
+    </form>
+
+
+    <!-- A var socket ouve a conexão com porta 3000 criada dentro do server.js -->
+    <script type="text/javascript">
+        var socket = io('http://localhost:3000');
+
+
+        /* Cria uma função usando jquery onde as mensagens serão renderizadas dentro do form*/
+
+        function renderMessage(message){
+            $('.messages').append('<div class="message"><strong>' + message.author + '</strong>: '+ message.message +' </div>');
+        }
+
+        /* As mensagens anteriores armazenadas no array serão mostradas se o usuário atualizar a página*/
+        socket.on('previousMessage', function(message){
+            for(message of message){
+                renderMessage(message);
+            }
+        });
+
+
+        /* O front-end recebe os dados enviados por outros usuários, em seguida chama
+           a função renderMessage para mostrar na tela*/
+        socket.on('receivedMessage', function(message){
+            renderMessage(message);
+        })
+
+
+        /*Verificamos quando o chat for submitado*/
+        $('#chat').submit(function(event){
+            event.preventDefault();
+            
+
+            /* Armazenamos autor e a mensagem recebidos do html dentro de duas variáveis*/
+            var author = $('input[name=username]').val();
+            var message = $('input[name=message]').val();
+
+            /* É criado um único objeto para armazenar as duas informações, em seguida trabalharemos
+               enviando apenas este objeto*/
+            var messageObject = {
+                    author: author,
+                    message: message,
+                };
+
+            renderMessage(messageObject);
+            
+
+            /*Funcão que envia o objeto criado para o socket*/
+            socket.emit('sendMessage', messageObject);
+            
+            
+                
+        });       
+    </script>
+</body>
+</html>
